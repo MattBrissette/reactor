@@ -1,0 +1,1685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Obscurial - Cherenkov</title>
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: #040706;
+    color: #e2f0e8;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  #c {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    display: block;
+    outline: none;
+  }
+
+  #vignette {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at center, transparent 40%, rgba(4, 7, 6, 0.45) 80%, rgba(2, 3, 3, 0.88) 100%);
+    z-index: 10;
+  }
+
+  #title-block {
+    position: fixed;
+    top: 28px;
+    left: 32px;
+    pointer-events: none;
+    z-index: 20;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.95);
+  }
+
+  #title-eyebrow {
+    display: block;
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #00d4ff;
+    text-shadow: 0 0 12px rgba(0, 212, 255, 0.45);
+    font-weight: 600;
+    margin-bottom: 4px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+
+  #title-headline {
+    display: block;
+    font-family: "Georgia", "Times New Roman", serif;
+    font-size: 38px;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    color: #edf6f9;
+    line-height: 1.1;
+    margin-bottom: 14px;
+  }
+
+  #title-block p {
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: #8da49f;
+    max-width: 270px;
+    font-weight: 300;
+  }
+
+  #title-block span.highlight {
+    color: #34d399;
+  }
+
+  /* Standalone floating Apple liquid glass pill button */
+  #controls-toggle-btn {
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    z-index: 50;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 38px;
+    padding: 0 22px;
+    border-radius: 9999px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.015em;
+    color: rgba(255, 255, 255, 0.95);
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(28px) saturate(200%);
+    -webkit-backdrop-filter: blur(28px) saturate(200%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 
+      0 4px 18px rgba(0, 0, 0, 0.4),
+      inset 0 1px 1px rgba(255, 255, 255, 0.55),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+    transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+  }
+
+  #controls-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+    border-color: rgba(0, 212, 255, 0.45);
+    box-shadow: 
+      0 6px 24px rgba(0, 0, 0, 0.5),
+      0 0 16px rgba(0, 212, 255, 0.25),
+      inset 0 1px 1.5px rgba(255, 255, 255, 0.75),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.3);
+    transform: scale(1.025);
+  }
+
+  #controls-toggle-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.97);
+  }
+
+  #pane-container {
+    position: fixed;
+    top: 68px;
+    right: 22px;
+    z-index: 45;
+    max-width: calc(100vw - 44px);
+    pointer-events: auto;
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  #pane-container.pane-hidden {
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px) scale(0.98);
+  }
+
+  /* Apple Glass HUD Container */
+  .apple-glass-card {
+    width: 295px;
+    border-radius: 26px;
+    background: rgba(255, 255, 255, 0.075);
+    backdrop-filter: blur(36px) saturate(210%);
+    -webkit-backdrop-filter: blur(36px) saturate(210%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: 
+      0 24px 50px rgba(0, 0, 0, 0.55),
+      inset 0 1px 1.5px rgba(255, 255, 255, 0.5),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.25);
+    padding: 14px 14px 16px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+  }
+
+  .glass-section {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px;
+    padding: 10px 12px 12px 12px;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .glass-section-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #e6f6ff;
+    letter-spacing: -0.015em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 2px;
+  }
+
+  .glass-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .glass-label {
+    font-size: 12px;
+    font-weight: 400;
+    color: rgba(255, 255, 255, 0.72);
+    letter-spacing: -0.01em;
+    min-width: 82px;
+    flex-shrink: 0;
+  }
+
+  .glass-slider-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
+  input[type="range"].glass-range {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 100%;
+    height: 5px;
+    border-radius: 9999px;
+    background: rgba(255, 255, 255, 0.14);
+    outline: none;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    cursor: pointer;
+    transition: background 0.2s ease;
+  }
+
+  input[type="range"].glass-range:hover {
+    background: rgba(255, 255, 255, 0.22);
+  }
+
+  input[type="range"].glass-range::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 2px 6px rgba(0, 0, 0, 0.4),
+      0 0 10px rgba(0, 212, 255, 0.55);
+    cursor: grab;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  input[type="range"].glass-range::-webkit-slider-thumb:active {
+    cursor: grabbing;
+    transform: scale(1.15);
+    box-shadow: 
+      0 3px 8px rgba(0, 0, 0, 0.5),
+      0 0 14px rgba(0, 212, 255, 0.8);
+  }
+
+  input[type="range"].glass-range::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    border-radius: 9999px;
+    background: #ffffff;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+    box-shadow: 
+      0 2px 6px rgba(0, 0, 0, 0.4),
+      0 0 10px rgba(0, 212, 255, 0.55);
+    cursor: grab;
+  }
+
+  .glass-badge {
+    min-width: 44px;
+    text-align: right;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 500;
+    color: #00d4ff;
+    padding: 2px 6px;
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 7px;
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+  }
+
+  .glass-switch {
+    position: relative;
+    display: inline-block;
+    width: 38px;
+    height: 22px;
+  }
+
+  .glass-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .glass-switch-slider {
+    position: absolute;
+    cursor: pointer;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 9999px;
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-switch-slider::before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 2px;
+    bottom: 2px;
+    background-color: #ffffff;
+    border-radius: 50%;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .glass-switch input:checked + .glass-switch-slider {
+    background: #00d4ff;
+    border-color: #00d4ff;
+    box-shadow: 0 0 12px rgba(0, 212, 255, 0.5);
+  }
+
+  .glass-switch input:checked + .glass-switch-slider::before {
+    transform: translateX(16px);
+  }
+
+  #fps {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    color: #4f7764;
+    z-index: 20;
+    letter-spacing: 0.05em;
+    pointer-events: none;
+  }
+
+  #loader {
+    position: fixed;
+    inset: 0;
+    background: #030605;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    z-index: 100;
+    transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.6s;
+  }
+
+  #loader.hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 2px solid rgba(0, 212, 255, 0.18);
+    border-top-color: #00d4ff;
+    border-radius: 50%;
+    box-shadow: 0 0 16px rgba(0, 212, 255, 0.4);
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .loading-text {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 13px;
+    letter-spacing: 0.15em;
+    color: #00d4ff;
+    text-shadow: 0 0 10px rgba(0, 212, 255, 0.45);
+    text-transform: uppercase;
+  }
+
+  .dot {
+    animation: blink 1.4s infinite both;
+  }
+  .dot:nth-child(2) { animation-delay: 0.2s; }
+  .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes blink {
+    0%, 80%, 100% { opacity: 0; }
+    40% { opacity: 1; }
+  }
+
+  @media (max-width: 640px) {
+    #title-block {
+      top: 18px;
+      left: 18px;
+    }
+    #title-headline {
+      font-size: 28px;
+    }
+    #title-block p {
+      font-size: 12px;
+    }
+    #pane-container {
+      top: 14px;
+      right: 14px;
+    }
+  }
+</style>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+    "three/webgpu": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.webgpu.js",
+    "three/tsl": "https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.tsl.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/",
+    "tweakpane": "https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js"
+  }
+}
+</script>
+</head>
+<body>
+<canvas id="c"></canvas>
+<button id="controls-toggle-btn" type="button" aria-label="Toggle Controls">Controls</button>
+
+<div id="pane-container" class="pane-hidden">
+  <div class="apple-glass-card">
+    <!-- Flow Section -->
+    <div class="glass-section">
+      <div class="glass-section-title">
+        <span>Flow</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">turbulence</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-turbulence" min="0" max="8" step="0.05" value="0.7">
+        </div>
+        <span class="glass-badge" id="val-turbulence">0.70</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">flowFreq</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-flowFreq" min="0.3" max="4" step="0.05" value="1.35">
+        </div>
+        <span class="glass-badge" id="val-flowFreq">1.35</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">flowSpeed</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-flowSpeed" min="0" max="0.6" step="0.01" value="0.11">
+        </div>
+        <span class="glass-badge" id="val-flowSpeed">0.11</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">lump</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-lump" min="0" max="0.6" step="0.02" value="0.20">
+        </div>
+        <span class="glass-badge" id="val-lump">0.20</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">rubber band</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-spring" min="0" max="8" step="0.1" value="5.2">
+        </div>
+        <span class="glass-badge" id="val-spring">5.20</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">damping</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-damping" min="0.2" max="8" step="0.1" value="3.2">
+        </div>
+        <span class="glass-badge" id="val-damping">3.20</span>
+      </div>
+    </div>
+
+    <!-- Cherenkov Pulse Section -->
+    <div class="glass-section">
+      <div class="glass-section-title">
+        <span>Cherenkov Pulse</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">auto pulse</span>
+        <label class="glass-switch">
+          <input type="checkbox" id="ctrl-pulse" checked>
+          <span class="glass-switch-slider"></span>
+        </label>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">every min (s)</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulseMin" min="0.5" max="15" step="0.5" value="3.0">
+        </div>
+        <span class="glass-badge" id="val-pulseMin">3.00</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">every max (s)</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulseMax" min="0.5" max="15" step="0.5" value="7.0">
+        </div>
+        <span class="glass-badge" id="val-pulseMax">7.00</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">flare</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulseGain" min="0" max="8" step="0.1" value="8.5">
+        </div>
+        <span class="glass-badge" id="val-pulseGain">8.50</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">tint swarm</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulseTint" min="0" max="1" step="0.01" value="0.96">
+        </div>
+        <span class="glass-badge" id="val-pulseTint">0.96</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">pierce crust</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulsePierce" min="0" max="1" step="0.01" value="0.95">
+        </div>
+        <span class="glass-badge" id="val-pulsePierce">0.95</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">bloom boost</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulseBloom" min="0" max="2" step="0.05" value="1.60">
+        </div>
+        <span class="glass-badge" id="val-pulseBloom">1.60</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">light wander</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-pulseWander" min="0" max="0.6" step="0.05" value="0.50">
+        </div>
+        <span class="glass-badge" id="val-pulseWander">0.50</span>
+      </div>
+    </div>
+
+    <!-- Environment & Lighting Section -->
+    <div class="glass-section">
+      <div class="glass-section-title">
+        <span>Environment &amp; Atmosphere</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">darkness</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-exposure" min="0.2" max="2.2" step="0.05" value="1.20">
+        </div>
+        <span class="glass-badge" id="val-exposure">1.20</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">fog density</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-fog" min="0.00" max="0.06" step="0.002" value="0.018">
+        </div>
+        <span class="glass-badge" id="val-fog">0.018</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">oculus light</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-moonLight" min="0" max="220" step="5" value="220">
+        </div>
+        <span class="glass-badge" id="val-moonLight">220.0</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">ambient</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-ambient" min="0.02" max="0.5" step="0.02" value="0.10">
+        </div>
+        <span class="glass-badge" id="val-ambient">0.10</span>
+      </div>
+      <div class="glass-row">
+        <span class="glass-label">light shaft</span>
+        <div class="glass-slider-wrap">
+          <input type="range" class="glass-range" id="ctrl-shafts" min="0" max="3.0" step="0.1" value="1.20">
+        </div>
+        <span class="glass-badge" id="val-shafts">1.20</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="vignette"></div>
+<div id="title-block">
+  <span id="title-eyebrow">Reactor Sector #04</span>
+</div>
+<div id="loader"><div class="spinner"></div><div class="loading-text">loading<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></div></div>
+<div id="fps">-- fps</div>
+
+<script>
+  const __fail = (msg) => {
+    const l = document.getElementById('loader');
+    if (!l) return;
+    l.classList.remove('hidden');
+    const sp = l.querySelector('.spinner'); if (sp) sp.style.display = 'none';
+    const t = l.querySelector('.loading-text');
+    if (t) t.textContent = 'error — ' + msg;
+  };
+  window.addEventListener('error', e => __fail(e.message || 'script error'));
+  window.addEventListener('unhandledrejection', e =>
+    __fail(e.reason && e.reason.message ? e.reason.message : String(e.reason)));
+</script>
+
+<script type="module">
+import * as THREE from 'three/webgpu';
+import {
+	Fn, uniform, instanceIndex, instancedArray, vec2, vec3, vec4, float, int, uint, uvec3, uv,
+	length, normalize, dot, cross, mix, smoothstep, exp, max, sqrt, fract, clamp, floor,
+	mx_noise_vec3, mx_noise_float, mx_fractal_noise_float, hash, time, sin, cos, atan, abs, sign, pow, mod,
+	positionWorld, positionView, normalView, normalWorld, step, min, reflector, If, Loop, atomicAdd, atomicLoad, atomicStore,
+	textureStore, texture3D, screenUV, screenCoordinate, pass
+} from 'three/tsl';
+import { bloom } from 'three/addons/tsl/display/BloomNode.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const BUILD = 'v2.6-cherenkov-silo-perf60';
+console.log( BUILD );
+
+// ═══════════════════════════════════════════════════════════════════
+//  renderer / scene / camera
+// ═══════════════════════════════════════════════════════════════════
+
+const renderer = new THREE.WebGPURenderer( { canvas: document.getElementById( 'c' ), antialias: false } );
+// Clamp pixel ratio to 1.25 on high-DPI displays to eliminate fillrate choke while retaining crisp visuals
+renderer.setPixelRatio( Math.min( window.devicePixelRatio || 1, 1.25 ) );
+renderer.setSize( Math.max( innerWidth, 8 ), Math.max( innerHeight, 8 ) );
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.2;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFShadowMap;
+// Shadow map updates static geometry only when needed
+renderer.shadowMap.autoUpdate = false;
+
+try { await renderer.init(); }
+catch ( e ) {
+	throw new Error( 'this browser could not start WebGPU or WebGL2' );
+}
+
+const isWebGL = renderer.backend.isWebGLBackend === true;
+const isMobile = matchMedia( '(pointer: coarse)' ).matches;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color( 0x030605 );
+scene.fog = new THREE.FogExp2( 0x030605, 0.018 );
+
+const camera = new THREE.PerspectiveCamera( 38, innerWidth / innerHeight, 0.05, 60 );
+const fitDistance = () => ( innerWidth / innerHeight < 0.8 ? 8.2 : 6.6 );
+camera.position.set( 0.0, 0.85, fitDistance() );
+{ const qc = new URLSearchParams( location.search ).get( 'cam' ); if ( qc ) camera.position.fromArray( qc.split( ',' ).map( Number ) ); }
+
+const controls = new OrbitControls( camera, renderer.domElement );
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.minDistance = 2.2;
+controls.maxDistance = 12.0;
+controls.maxPolarAngle = 1.78;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+controls.mouseButtons = { LEFT: null, MIDDLE: THREE.MOUSE.DOLLY, RIGHT: THREE.MOUSE.ROTATE };
+controls.touches = { ONE: null, TWO: THREE.TOUCH.DOLLY_ROTATE };
+
+// ═══════════════════════════════════════════════════════════════════
+//  particle data
+// ═══════════════════════════════════════════════════════════════════
+
+const qn = parseInt( new URLSearchParams( location.search ).get( 'n' ) || '0', 10 );
+// 262,144 particles provides full volumetric density while eliminating GPU compute dispatch delays
+const COUNT = qn > 0 ? qn : isWebGL ? 98304 : ( isMobile ? 131072 : 262144 );
+
+const posArr  = new Float32Array( COUNT * 4 );
+const velArr  = new Float32Array( COUNT * 4 );
+const homeArr = new Float32Array( COUNT * 4 );
+
+for ( let i = 0; i < COUNT; i ++ ) {
+
+	let x, y, z, l;
+	do { x = Math.random() * 2 - 1; y = Math.random() * 2 - 1; z = Math.random() * 2 - 1; l = x * x + y * y + z * z; } while ( l > 1 || l < 1e-4 );
+	l = Math.sqrt( l ); x /= l; y /= l; z /= l;
+
+	let r;
+	if ( Math.random() < 0.72 ) r = 0.80 + 0.20 * Math.pow( Math.random(), 0.45 );
+	else r = 0.78 * Math.cbrt( Math.random() );
+
+	const k = i * 4;
+	homeArr[ k ] = x * r; homeArr[ k + 1 ] = y * r; homeArr[ k + 2 ] = z * r; homeArr[ k + 3 ] = Math.random();
+	posArr[ k ] = x * r; posArr[ k + 1 ] = y * r; posArr[ k + 2 ] = z * r; posArr[ k + 3 ] = 1;
+
+}
+
+const posB  = instancedArray( posArr,  'vec4' );
+const velB  = instancedArray( velArr,  'vec4' );
+const homeB = instancedArray( homeArr, 'vec4' );
+
+// ═══════════════════════════════════════════════════════════════════
+//  parameters / uniforms (Cherenkov Theme)
+// ═══════════════════════════════════════════════════════════════════
+
+const P = {
+	turbulence: 0.7, flowFreq: 1.35, flowSpeed: 0.11, lump: 0.2, lumpFreq: 1.25,
+	spring: 5.2, damping: 3.2,
+	radius: 0.30, push: 4.0, swirl: 14.35, dive: - 10.0, drag: 4.62, hover: 0.35, autoStir: true,
+	size: 0.0072, alpha: 0.85, grey: '#3e433e', ember: '#00d4ff', coreGain: 2.2,
+	shellIn: 0.70, shellOut: 0.86, spill: 0.65, fall: 2.8,
+	bloomStrength: 1.05, bloomRadius: 0.58, bloomThreshold: 0.42, exposure: 1.2,
+	shadows: true, veil: 0.85, extinction: 5.5, redExtinction: 3.2, sun: 1.15, ambient: 0.10,
+	haze: ! isMobile, hazeGain: 1.75, hazeDensity: 0.55,
+	environment: true, emberLight: 12, moonLight: 220, reflections: ! isMobile, fog: 0.018, shafts: 1.2, dust: 1.0,
+	pulse: true, pulseMin: 3.0, pulseMax: 7.0, pulseGain: 8.5, pulseTint: 0.96, pulsePierce: 0.95, pulseBloom: 1.6, pulseWander: 0.5,
+};
+
+const uTime = uniform( 0 ), uDt = uniform( 1 / 60 );
+const uTurb = uniform( P.turbulence ), uFreq = uniform( P.flowFreq ), uFlowSpeed = uniform( P.flowSpeed );
+const uLump = uniform( P.lump ), uLumpFreq = uniform( P.lumpFreq );
+const uSpring = uniform( P.spring ), uDamp = uniform( P.damping );
+const uRayO = uniform( new THREE.Vector3( 0, 0, 10 ) ), uRayD = uniform( new THREE.Vector3( 0, 0, - 1 ) );
+const uPtr = uniform( 0 ), uPtrVel = uniform( new THREE.Vector3() );
+const uRad = uniform( P.radius ), uPush = uniform( P.push ), uSwirl = uniform( P.swirl ), uDive = uniform( P.dive ), uDrag = uniform( P.drag );
+
+const uSize = uniform( P.size ), uAlpha = uniform( P.alpha );
+const uGrey = uniform( new THREE.Color( P.grey ) ), uEmber = uniform( new THREE.Color( P.ember ) );
+const uCoreGain = uniform( P.coreGain ), uShellIn = uniform( P.shellIn ), uShellOut = uniform( P.shellOut );
+const uSpill = uniform( P.spill ), uFall = uniform( P.fall );
+const uLightDir = uniform( new THREE.Vector3( 0.15, 0.96, 0.22 ).normalize() );
+const uRedPos = uniform( new THREE.Vector3( 0.05, - 0.38, 0.1 ) );
+const uPulse = uniform( 0 ), uPulseGain = uniform( P.pulseGain ), uPulseTint = uniform( P.pulseTint ), uPulsePierce = uniform( P.pulsePierce );
+const uExt = uniform( P.extinction ), uExtRed = uniform( P.redExtinction ), uSun = uniform( P.sun ), uAmb = uniform( P.ambient );
+const uViewOcc = uniform( P.veil ), uShadowMix = uniform( 1 ), uHazeGain = uniform( P.hazeGain ), uHazeDens = uniform( P.hazeDensity );
+const uInvVP = uniform( new THREE.Matrix4() ), uCamPos = uniform( new THREE.Vector3() );
+
+// ═══════════════════════════════════════════════════════════════════
+//  curl noise
+// ═══════════════════════════════════════════════════════════════════
+
+const curl = Fn( ( [ p ] ) => {
+
+	const e = 0.09;
+	const n  = mx_noise_vec3( p );
+	const nx = mx_noise_vec3( p.add( vec3( e, 0, 0 ) ) ).sub( n );
+	const ny = mx_noise_vec3( p.add( vec3( 0, e, 0 ) ) ).sub( n );
+	const nz = mx_noise_vec3( p.add( vec3( 0, 0, e ) ) ).sub( n );
+	return vec3( ny.z.sub( nz.y ), nz.x.sub( nx.z ), nx.y.sub( ny.x ) ).div( e );
+
+} );
+
+// ═══════════════════════════════════════════════════════════════════
+//  particle simulation compute shader
+// ═══════════════════════════════════════════════════════════════════
+
+const update = Fn( () => {
+
+	const P4 = posB.element( instanceIndex );
+	const V4 = velB.element( instanceIndex );
+	const H4 = homeB.element( instanceIndex );
+
+	const p = P4.xyz.toVar();
+	const v = V4.xyz.toVar();
+	const h = H4.xyz;
+
+	const lq = h.mul( uLumpFreq ).add( vec3( 3.1, uTime.mul( 0.06 ), 7.7 ) );
+	const lump = mx_noise_float( lq ).add( mx_noise_float( lq.mul( 2.7 ) ).mul( 0.45 ) );
+	const target = h.mul( lump.mul( uLump ).add( 1.0 ) );
+
+	const q = p.mul( uFreq ).add( vec3( uTime.mul( uFlowSpeed ), uTime.mul( uFlowSpeed ).mul( 0.6 ), 11.0 ) );
+	const flow = curl( q ).add( curl( q.mul( 2.3 ).add( 5.0 ) ).mul( 0.35 ) );
+	v.addAssign( flow.mul( uTurb ).mul( uDt ) );
+
+	v.addAssign( target.sub( p ).mul( uSpring ).mul( uDt ) );
+
+	const rel = p.sub( uRayO );
+	const along = max( dot( rel, uRayD ), 0.0 );
+	const d = rel.sub( uRayD.mul( along ) );
+	const dist = max( length( d ), 1e-4 );
+	const nrm = d.div( dist );
+	const f = exp( dist.mul( dist ).div( uRad.mul( uRad ) ).negate() ).mul( uPtr );
+	const kick = nrm.mul( uPush ).add( cross( uRayD, nrm ).mul( uSwirl ) ).add( uRayD.mul( uDive ) );
+	v.addAssign( kick.mul( f ).mul( uDt ) );
+	v.addAssign( uPtrVel.mul( f ).mul( uDrag ) );
+
+	v.mulAssign( exp( uDamp.mul( uDt ).negate() ) );
+	p.addAssign( v.mul( uDt ) );
+
+	P4.assign( vec4( p, P4.w ) );
+	V4.assign( vec4( v, 0.0 ) );
+
+} )().compute( COUNT );
+
+// ═══════════════════════════════════════════════════════════════════
+//  optimized density volume
+// ═══════════════════════════════════════════════════════════════════
+
+const VOL = ! isWebGL;
+const B = 1.9;
+// Perfectly balanced grid dimensions: 64^3 and 40^3 maintain high-res density gradients at 60 FPS
+const G = isMobile ? 48 : 64;
+const LG = isMobile ? 28 : 40;
+const SUN_STEPS = 6, RED_STEPS = 6, VIEW_STEPS = 6, HAZE_STEPS = isMobile ? 10 : 14;
+const toGrid = ( wp ) => wp.div( B * 2 ).add( 0.5 );
+
+let densTex = null, lightTex = null, volumePasses = [];
+
+if ( VOL ) {
+
+	const G3 = G * G * G;
+	const gridBuf = instancedArray( G3, 'uint' ).toAtomic();
+	const uDensNorm = uniform( ( 524288 / COUNT ) / 20 * Math.pow( G / 72, 3 ) );
+
+	densTex = new THREE.Storage3DTexture( G, G, G );
+	densTex.type = THREE.HalfFloatType;
+	lightTex = new THREE.Storage3DTexture( LG, LG, LG );
+	lightTex.type = THREE.HalfFloatType;
+
+	const clearGrid = Fn( () => {
+		atomicStore( gridBuf.element( instanceIndex ), uint( 0 ) );
+	} )().compute( G3 );
+
+	const splat = Fn( () => {
+		const g = toGrid( posB.element( instanceIndex ).xyz ).mul( G ).toVar();
+		If( g.x.greaterThanEqual( 0 ).and( g.y.greaterThanEqual( 0 ) ).and( g.z.greaterThanEqual( 0 ) )
+			.and( g.x.lessThan( G ) ).and( g.y.lessThan( G ) ).and( g.z.lessThan( G ) ), () => {
+			const c = uvec3( floor( g ) );
+			atomicAdd( gridBuf.element( c.x.add( c.y.mul( G ) ).add( c.z.mul( G * G ) ) ), uint( 1 ) );
+		} );
+	} )().compute( COUNT );
+
+	const cellIndex = ( x, y, z ) => uint(
+		clamp( x, int( 0 ), int( G - 1 ) )
+			.add( clamp( y, int( 0 ), int( G - 1 ) ).mul( G ) )
+			.add( clamp( z, int( 0 ), int( G - 1 ) ).mul( G * G ) )
+	);
+
+	const blur = Fn( () => {
+		const i = instanceIndex;
+		const x = int( i.mod( G ) ).toVar(), y = int( i.div( G ).mod( G ) ).toVar(), z = int( i.div( G * G ) ).toVar();
+		const sum = float( 0 ).toVar();
+		for ( let dz = - 1; dz <= 1; dz ++ ) for ( let dy = - 1; dy <= 1; dy ++ ) for ( let dx = - 1; dx <= 1; dx ++ ) {
+			const w = ( dx === 0 ? 2 : 1 ) * ( dy === 0 ? 2 : 1 ) * ( dz === 0 ? 2 : 1 ) / 64;
+			const c = atomicLoad( gridBuf.element( cellIndex( x.add( dx ), y.add( dy ), z.add( dz ) ) ) );
+			sum.addAssign( float( c ).mul( w ) );
+		}
+		textureStore( densTex, uvec3( x, y, z ), vec4( sum.mul( uDensNorm ), 0, 0, 1 ) );
+	} )().compute( G3 );
+
+	const densAt = ( wp ) => texture3D( densTex, toGrid( wp ) ).level( 0 ).r;
+
+	const lightPass = Fn( () => {
+		const i = instanceIndex;
+		const x = i.mod( LG ), y = i.div( LG ).mod( LG ), z = i.div( LG * LG );
+		const wp = vec3( float( x ), float( y ), float( z ) ).add( 0.5 ).div( LG ).sub( 0.5 ).mul( B * 2 ).toVar();
+
+		const dsS = 1.7 / SUN_STEPS;
+		const accS = float( 0 ).toVar();
+		Loop( SUN_STEPS, ( { i: k } ) => {
+			accS.addAssign( densAt( wp.add( uLightDir.mul( float( k ).add( 0.5 ).mul( dsS ) ) ) ) );
+		} );
+		const tSun = exp( accS.mul( dsS ).mul( uExt ).negate() );
+
+		const toL = uRedPos.sub( wp ).toVar();
+		const dsR = length( toL ).div( RED_STEPS );
+		const accR = float( 0 ).toVar();
+		Loop( RED_STEPS, ( { i: k } ) => {
+			accR.addAssign( densAt( wp.add( toL.mul( float( k ).add( 0.5 ).div( RED_STEPS ) ) ) ) );
+		} );
+		const tRed = exp( accR.mul( dsR ).mul( uExtRed ).mul( uPulse.mul( uPulsePierce ).oneMinus() ).negate() );
+
+		const toC = normalize( uCamPos.sub( wp ) ).toVar();
+		const dsV = 2.2 / VIEW_STEPS;
+		const accV = float( 0 ).toVar();
+		Loop( VIEW_STEPS, ( { i: k } ) => {
+			accV.addAssign( densAt( wp.add( toC.mul( float( k ).add( 1.0 ).mul( dsV ) ) ) ) );
+		} );
+		const tView = exp( accV.mul( dsV ).mul( uExt ).negate() );
+
+		textureStore( lightTex, uvec3( x, y, z ), vec4( tSun, tRed, tView, 1 ) );
+	} )().compute( LG * LG * LG );
+
+	volumePasses = [ clearGrid, splat, blur, lightPass ];
+
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  particle material
+// ═══════════════════════════════════════════════════════════════════
+
+const material = new THREE.SpriteNodeMaterial( { transparent: true, depthWrite: true } );
+material.alphaTest = 0.12;
+
+const pAttr = posB.toAttribute().xyz;
+const hAttr = homeB.toAttribute();
+
+material.positionNode = pAttr;
+material.scaleNode = uSize.mul( hAttr.w.mul( 0.9 ).add( 0.55 ) );
+
+const colorNode = Fn( () => {
+
+	const hr = length( hAttr.xyz );
+	const core = smoothstep( uShellIn, uShellOut, hr ).oneMinus();
+
+	const L = VOL ? texture3D( lightTex, toGrid( pAttr ) ) : vec4( 1, 1, 1, 1 );
+	const tView = mix( float( 1 ), L.b, uShadowMix.mul( uViewOcc ) );
+	const tSun = mix( float( 1 ), L.r, uShadowMix );
+	const tRed = mix( float( 1 ), L.g, uShadowMix );
+
+	const N = normalize( pAttr );
+	const lam = dot( N, uLightDir ).mul( 0.5 ).add( 0.5 );
+	const grain = hAttr.w.mul( 0.35 ).add( 0.75 );
+	const ash = uGrey.mul( uAmb.add( lam.mul( 0.6 ).add( 0.4 ).mul( tSun ).mul( uSun ) ) ).mul( grain );
+
+	const glow = exp( length( pAttr.sub( uRedPos ) ).mul( uFall ).negate() );
+	const flare = uPulse.mul( uPulseGain ).add( 1.0 );
+	const tint = uPulse.mul( uPulseTint );
+	const ashT = mix( ash, ash.mul( vec3( 0.34, 1.25, 0.75 ) ), tint );
+	const lit = glow.mul( 0.6 ).add( 0.4 ).mul( tRed );
+	const cherenkovC = mix( vec3( 0.0, 0.88, 1.0 ), vec3( 0.05, 0.95, 0.35 ), uPulse.mul( 0.75 ) );
+	const crust = ashT.add( cherenkovC.mul( glow.mul( uSpill ).mul( tRed ).mul( flare ) ) ).add( cherenkovC.mul( lit.mul( tint ).mul( 0.45 ) ) );
+	const ember = cherenkovC.mul( uCoreGain ).mul( glow.mul( 0.7 ).add( 0.3 ) ).mul( mix( float( 0.25 ), float( 1 ), tRed ) ).mul( grain ).mul( flare );
+
+	return mix( crust, ember, core ).mul( tView );
+
+} )();
+
+material.colorNode = colorNode;
+material.opacityNode = smoothstep( 0.5, 0.15, length( uv().sub( 0.5 ) ) ).mul( uAlpha );
+
+const particles = new THREE.Sprite( material );
+particles.count = COUNT;
+particles.frustumCulled = false;
+scene.add( particles );
+
+// ═══════════════════════════════════════════════════════════════════
+//  decommissioned cooling silo environment
+// ═══════════════════════════════════════════════════════════════════
+
+const SILO = { radius: 10.5, floor: - 2.8, ceil: 11.0, oculusRadius: 3.6 };
+const env = new THREE.Group();
+scene.add( env );
+
+const uEmberLight = uniform( 1 ), uShaft = uniform( 1 ), uDust = uniform( 1 );
+
+const bump = Fn( ( [ h, s ] ) => {
+	const p = positionView, n = normalView;
+	const dpdx = p.dFdx(), dpdy = p.dFdy();
+	const r1 = cross( dpdy, n ), r2 = cross( n, dpdx );
+	const det = dot( dpdx, r1 );
+	const grad = r1.mul( h.dFdx() ).add( r2.mul( h.dFdy() ) ).mul( sign( det ) );
+	return normalize( n.mul( abs( det ) ).sub( grad.mul( s ) ) );
+} );
+
+const fbm = ( p, o = 4 ) => mx_fractal_noise_float( p, o, 2.0, 0.5 );
+
+// Ribbed Concrete Wall
+const siloWallMat = new THREE.MeshStandardNodeMaterial( { side: THREE.BackSide } );
+{
+	const wp = positionWorld;
+	const angle = atan( wp.x.div( max( abs( wp.z ), 1e-4 ) ) );
+	const fluting = sin( angle.mul( 64.0 ) ).mul( 0.5 ).add( 0.5 );
+	const liftJoint = smoothstep( 0.02, 0.0, abs( fract( wp.y.div( 1.5 ) ).sub( 0.5 ) ).mul( 2.0 ) );
+	const rainWash = mx_noise_float( vec3( angle.mul( 18.0 ), wp.y.mul( 0.15 ), 3.4 ) );
+	const streaks = smoothstep( - 0.1, 0.5, rainWash );
+	const acidDrip = smoothstep( 0.2, 0.7, fbm( vec3( angle.mul( 8.0 ), wp.y.mul( 0.4 ), 8.2 ), 3 ) );
+	const blastScars = smoothstep( 0.45, 0.85, mx_noise_float( vec3( angle.mul( 12.0 ), wp.y.mul( 0.3 ), 1.1 ) ) );
+	const baseCol = mix( vec3( 0.10, 0.11, 0.105 ), vec3( 0.05, 0.055, 0.05 ), streaks.mul( 0.6 ) );
+	const chemicallyTainted = mix( baseCol, vec3( 0.08, 0.13, 0.09 ), acidDrip.mul( 0.55 ) );
+	const scarred = mix( chemicallyTainted, vec3( 0.025, 0.03, 0.03 ), blastScars.mul( 0.7 ) );
+
+	siloWallMat.colorNode = scarred.mul( liftJoint.mul( 0.35 ).oneMinus() );
+	siloWallMat.roughnessNode = mix( float( 0.88 ), float( 0.65 ), acidDrip.mul( 0.4 ) );
+	siloWallMat.metalnessNode = float( 0.02 );
+	siloWallMat.normalNode = bump( fluting.mul( 0.02 ).sub( liftJoint.mul( 0.015 ) ), float( 0.8 ) );
+}
+const siloWallMesh = new THREE.Mesh( new THREE.CylinderGeometry( SILO.radius * 0.92, SILO.radius, SILO.ceil - SILO.floor, 72, 1, true ), siloWallMat );
+siloWallMesh.position.y = ( SILO.ceil + SILO.floor ) / 2;
+siloWallMesh.receiveShadow = true;
+env.add( siloWallMesh );
+
+// Oculus Sky Ring
+const oculusMat = new THREE.MeshStandardNodeMaterial( { side: THREE.DoubleSide } );
+oculusMat.colorNode = vec3( 0.05, 0.055, 0.05 );
+oculusMat.roughnessNode = float( 0.9 );
+const oculusRing = new THREE.Mesh( new THREE.RingGeometry( SILO.oculusRadius, SILO.radius * 0.92, 48 ), oculusMat );
+oculusRing.rotation.x = Math.PI / 2;
+oculusRing.position.y = SILO.ceil;
+env.add( oculusRing );
+
+// ═══════════════════════════════════════════════════════════════════
+//  weathered soviet industrial posters
+// ═══════════════════════════════════════════════════════════════════
+
+function createSovietPosterCanvas( variant ) {
+	const cv = document.createElement( 'canvas' );
+	cv.width = 512;
+	cv.height = 720;
+	const ctx = cv.getContext( '2d' );
+
+	ctx.fillStyle = variant === 0 ? '#d9cfb5' : ( variant === 1 ? '#c8bda2' : '#cfc3a9' );
+	ctx.fillRect( 0, 0, 512, 720 );
+
+	for ( let i = 0; i < 2800; i ++ ) {
+		ctx.fillStyle = Math.random() < 0.5 ? 'rgba(70, 55, 35, 0.04)' : 'rgba(0, 0, 0, 0.03)';
+		ctx.fillRect( Math.random() * 512, Math.random() * 720, Math.random() * 6 + 1, Math.random() * 6 + 1 );
+	}
+
+	for ( let i = 0; i < 5; i ++ ) {
+		const sx = Math.random() * 450 + 30;
+		const grad = ctx.createLinearGradient( sx, 0, sx + 25, 720 );
+		grad.addColorStop( 0, 'rgba(60, 45, 25, 0.15)' );
+		grad.addColorStop( 0.7, 'rgba(30, 20, 10, 0.08)' );
+		grad.addColorStop( 1, 'rgba(0, 0, 0, 0.2)' );
+		ctx.fillStyle = grad;
+		ctx.fillRect( sx, 0, Math.random() * 45 + 15, 720 );
+	}
+
+	if ( variant === 0 ) {
+		ctx.fillStyle = '#9e221b';
+		ctx.fillRect( 36, 40, 440, 95 );
+
+		ctx.fillStyle = '#f4eee0';
+		ctx.font = '900 48px "Impact", "Arial Black", sans-serif';
+		ctx.textAlign = 'center';
+		ctx.fillText( 'ОПАСНОСТЬ', 256, 106 );
+
+		ctx.fillStyle = '#161817';
+		ctx.beginPath();
+		ctx.moveTo( 36, 155 );
+		ctx.lineTo( 476, 155 );
+		ctx.lineTo( 476, 440 );
+		ctx.lineTo( 36, 485 );
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.fillStyle = '#d4881a';
+		ctx.beginPath();
+		ctx.arc( 256, 310, 95, 0, Math.PI * 2 );
+		ctx.fill();
+
+		ctx.fillStyle = '#161817';
+		ctx.beginPath();
+		ctx.arc( 256, 310, 32, 0, Math.PI * 2 );
+		ctx.fill();
+
+		for ( let a = 0; a < 3; a ++ ) {
+			ctx.beginPath();
+			ctx.moveTo( 256, 310 );
+			const ang = ( a * 120 - 90 ) * ( Math.PI / 180 );
+			ctx.arc( 256, 310, 88, ang - 0.48, ang + 0.48 );
+			ctx.closePath();
+			ctx.fill();
+		}
+
+		ctx.fillStyle = '#1a1b18';
+		ctx.font = 'bold 36px "Courier New", monospace';
+		ctx.fillText( 'ЗОНА ПОРАЖЕНИЯ', 256, 560 );
+		ctx.font = '600 22px "Arial", sans-serif';
+		ctx.fillStyle = '#3a3a34';
+		ctx.fillText( 'ВХОД СТРОГО В КОСТЮМАХ', 256, 605 );
+		ctx.font = 'bold 18px monospace';
+		ctx.fillText( 'СЕКТОР Т-04 // ОБЪЕКТ 88', 256, 650 );
+
+	} else if ( variant === 1 ) {
+		ctx.lineWidth = 14;
+		ctx.strokeStyle = '#9e221b';
+		ctx.strokeRect( 30, 30, 452, 660 );
+
+		ctx.fillStyle = '#9e221b';
+		ctx.beginPath();
+		ctx.moveTo( 256, 75 );
+		ctx.lineTo( 440, 370 );
+		ctx.lineTo( 72, 370 );
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.fillStyle = '#f4eee0';
+		ctx.beginPath();
+		ctx.moveTo( 275, 130 );
+		ctx.lineTo( 220, 240 );
+		ctx.lineTo( 265, 240 );
+		ctx.lineTo( 230, 345 );
+		ctx.lineTo( 305, 220 );
+		ctx.lineTo( 260, 220 );
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.fillStyle = '#161817';
+		ctx.font = '900 52px "Impact", sans-serif';
+		ctx.textAlign = 'center';
+		ctx.fillText( 'НЕ ВХОДИ!', 256, 455 );
+
+		ctx.fillStyle = '#9e221b';
+		ctx.fillRect( 46, 480, 420, 52 );
+		ctx.fillStyle = '#f4eee0';
+		ctx.font = 'bold 28px "Arial", sans-serif';
+		ctx.fillText( 'СМЕРТЕЛЬНО', 256, 517 );
+
+		ctx.fillStyle = '#2d2f2d';
+		ctx.font = '600 24px monospace';
+		ctx.fillText( 'РЕАКТОРНЫЙ ЗАЛ №4', 256, 580 );
+		ctx.font = '19px monospace';
+		ctx.fillText( 'ПРИКАЗ МИНИСТЕРСТВА', 256, 620 );
+		ctx.fillText( 'ЭНЕРГЕТИКИ СССР', 256, 646 );
+
+	} else {
+		ctx.fillStyle = '#1a1f1d';
+		ctx.fillRect( 36, 40, 440, 320 );
+
+		ctx.strokeStyle = '#d4881a';
+		ctx.lineWidth = 8;
+		ctx.beginPath();
+		ctx.ellipse( 256, 200, 150, 60, Math.PI / 4, 0, Math.PI * 2 );
+		ctx.stroke();
+		ctx.beginPath();
+		ctx.ellipse( 256, 200, 150, 60, - Math.PI / 4, 0, Math.PI * 2 );
+		ctx.stroke();
+
+		ctx.fillStyle = '#9e221b';
+		ctx.beginPath();
+		ctx.arc( 256, 200, 42, 0, Math.PI * 2 );
+		ctx.fill();
+
+		ctx.fillStyle = '#161817';
+		ctx.font = '900 44px "Impact", sans-serif';
+		ctx.textAlign = 'center';
+		ctx.fillText( 'ВНИМАНИЕ!', 256, 415 );
+
+		ctx.fillStyle = '#7a1c17';
+		ctx.font = 'bold 26px "Arial", sans-serif';
+		ctx.fillText( 'КОНТРОЛЬ ЗАЩИТЫ', 256, 465 );
+
+		ctx.fillStyle = '#30332f';
+		ctx.font = 'bold 20px monospace';
+		ctx.fillText( 'НАРУШЕНИЕ РЕЖИМА —', 256, 530 );
+		ctx.fillText( 'ПРЕСТУПЛЕНИЕ', 256, 560 );
+
+		ctx.fillStyle = '#6b7068';
+		ctx.font = '16px monospace';
+		ctx.fillText( 'ГОСПРОМНАДЗОР СССР', 256, 630 );
+	}
+
+	return cv;
+}
+
+function createPeelAlphaCanvas( peelType ) {
+	const cv = document.createElement( 'canvas' );
+	cv.width = 256;
+	cv.height = 360;
+	const ctx = cv.getContext( '2d' );
+
+	ctx.fillStyle = '#ffffff';
+	ctx.fillRect( 0, 0, 256, 360 );
+
+	ctx.fillStyle = '#000000';
+	ctx.beginPath();
+
+	if ( peelType === 0 ) {
+		ctx.moveTo( 140, 360 );
+		ctx.lineTo( 256, 220 );
+		ctx.lineTo( 256, 360 );
+		ctx.closePath();
+		ctx.fill();
+
+		for ( let y = 30; y < 330; y += 40 ) {
+			if ( Math.random() < 0.6 ) {
+				ctx.beginPath();
+				ctx.arc( 0, y, Math.random() * 14 + 4, 0, Math.PI * 2 );
+				ctx.fill();
+			}
+		}
+	} else if ( peelType === 1 ) {
+		ctx.moveTo( 0, 0 );
+		ctx.lineTo( 80, 0 );
+		ctx.lineTo( 0, 60 );
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.moveTo( 180, 360 );
+		ctx.lineTo( 256, 280 );
+		ctx.lineTo( 256, 360 );
+		ctx.closePath();
+		ctx.fill();
+
+		ctx.beginPath();
+		ctx.ellipse( 90, 180, 18, 9, 0.4, 0, Math.PI * 2 );
+		ctx.fill();
+	} else {
+		ctx.moveTo( 0, 310 );
+		for ( let x = 0; x <= 256; x += 16 ) {
+			ctx.lineTo( x, 310 + Math.sin( x * 0.15 ) * 25 + ( Math.random() * 15 ) );
+		}
+		ctx.lineTo( 256, 360 );
+		ctx.lineTo( 0, 360 );
+		ctx.closePath();
+		ctx.fill();
+	}
+
+	return cv;
+}
+
+const posterConfigs = [
+	{ angle: - 0.55, y: SILO.floor + 3.1, w: 1.85, h: 2.55, variant: 0, peel: 0, curl: 0.18 },
+	{ angle: 0.42,  y: SILO.floor + 2.7, w: 1.65, h: 2.30, variant: 1, peel: 1, curl: 0.12 },
+	{ angle: 1.68,  y: SILO.floor + 3.4, w: 1.75, h: 2.45, variant: 2, peel: 2, curl: 0.22 },
+	{ angle: - 1.82, y: SILO.floor + 2.5, w: 1.55, h: 2.15, variant: 0, peel: 1, curl: 0.08 }
+];
+
+for ( const cfg of posterConfigs ) {
+	const colTex = new THREE.CanvasTexture( createSovietPosterCanvas( cfg.variant ) );
+	colTex.colorSpace = THREE.SRGBColorSpace;
+	const alphaTex = new THREE.CanvasTexture( createPeelAlphaCanvas( cfg.peel ) );
+
+	const pMat = new THREE.MeshStandardMaterial( {
+		map: colTex,
+		alphaMap: alphaTex,
+		transparent: true,
+		roughness: 0.88,
+		metalness: 0.0,
+		side: THREE.DoubleSide,
+		depthWrite: true,
+		polygonOffset: true,
+		polygonOffsetFactor: - 4,
+		polygonOffsetUnits: - 4
+	} );
+
+	const segsX = 24, segsY = 24;
+	const pGeo = new THREE.PlaneGeometry( cfg.w, cfg.h, segsX, segsY );
+	const pos = pGeo.attributes.position;
+	const wallR = SILO.radius * 0.985;
+
+	for ( let i = 0; i < pos.count; i ++ ) {
+		const px = pos.getX( i );
+		const py = pos.getY( i );
+
+		const arc = px / wallR;
+		const rOffset = ( 1.0 - Math.cos( arc ) ) * wallR;
+
+		const uNorm = ( px + cfg.w * 0.5 ) / cfg.w;
+		const vNorm = ( py + cfg.h * 0.5 ) / cfg.h;
+		let curlOut = 0;
+		if ( cfg.peel === 0 && uNorm > 0.6 && vNorm < 0.4 ) {
+			curlOut = Math.pow( ( uNorm - 0.6 ) * ( 0.4 - vNorm ) * 6.5, 2 ) * cfg.curl;
+		} else if ( cfg.peel === 1 && uNorm > 0.6 && vNorm > 0.6 ) {
+			curlOut = Math.pow( ( uNorm - 0.6 ) * ( vNorm - 0.6 ) * 6.5, 2 ) * cfg.curl;
+		}
+
+		pos.setZ( i, - rOffset + curlOut );
+	}
+	pGeo.computeVertexNormals();
+
+	const pMesh = new THREE.Mesh( pGeo, pMat );
+	const wx = Math.sin( cfg.angle ) * wallR;
+	const wz = Math.cos( cfg.angle ) * wallR;
+	pMesh.position.set( wx, cfg.y, wz );
+	pMesh.rotation.y = cfg.angle + Math.PI;
+	pMesh.receiveShadow = true;
+	env.add( pMesh );
+}
+
+// Perimeter Rubble
+{
+	const concreteChunkMat = new THREE.MeshStandardNodeMaterial();
+	concreteChunkMat.colorNode = vec3( 0.09, 0.10, 0.095 );
+	concreteChunkMat.roughnessNode = float( 0.95 );
+	const N = 180;
+	const rubble = new THREE.InstancedMesh( new THREE.DodecahedronGeometry( 0.18, 0 ), concreteChunkMat, N );
+	const m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), v = new THREE.Vector3(), sc = new THREE.Vector3();
+	for ( let i = 0; i < N; i ++ ) {
+		const a = Math.random() * Math.PI * 2;
+		const r = SILO.radius * 0.72 + Math.random() * ( SILO.radius * 0.24 );
+		const s = 0.5 + Math.random() * 2.2;
+		v.set( Math.cos( a ) * r, SILO.floor + 0.08 * s, Math.sin( a ) * r );
+		q.setFromEuler( e.set( Math.random() * 6, Math.random() * 6, Math.random() * 6 ) );
+		m.compose( v, q, sc.set( s, s * ( 0.6 + Math.random() * 0.5 ), s ) );
+		rubble.setMatrixAt( i, m );
+	}
+	rubble.castShadow = true; rubble.receiveShadow = true;
+	env.add( rubble );
+}
+
+// Volumetric daylight shaft
+function shaft( from, dir, len, r0, r1, strength ) {
+	const m = new THREE.MeshBasicNodeMaterial( { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending, side: THREE.DoubleSide, fog: false } );
+	const facing = abs( dot( normalize( normalView ), vec3( 0, 0, 1 ) ) );
+	const along = uv().y;
+	const dust = fbm( positionWorld.mul( 1.1 ).add( vec3( 0, time.mul( - 0.05 ), time.mul( 0.02 ) ) ), 3 ).mul( 0.5 ).add( 0.75 );
+	m.colorNode = vec3( 0.25, 0.65, 0.72 ).mul( pow( facing, 2.8 ) ).mul( mix( float( 0.1 ), float( 1 ), along ) ).mul( dust ).mul( strength ).mul( uShaft );
+	const geo = new THREE.CylinderGeometry( r0, r1, len, 36, 1, true );
+	const mesh = new THREE.Mesh( geo, m );
+	const d = dir.clone().normalize();
+	mesh.quaternion.setFromUnitVectors( new THREE.Vector3( 0, 1, 0 ), d.clone().negate() );
+	mesh.position.copy( from ).addScaledVector( d, len / 2 );
+	mesh.renderOrder = 2;
+	env.add( mesh );
+}
+shaft( new THREE.Vector3( 0, SILO.ceil, 0 ), new THREE.Vector3( 0.05, - 1, 0.02 ), SILO.ceil - SILO.floor, SILO.oculusRadius * 0.95, SILO.radius * 0.65, 0.065 );
+
+// Ambient particulate motes
+{
+	const DUST = isMobile ? 800 : 2000;
+	const m = new THREE.SpriteNodeMaterial( { transparent: true, depthWrite: false, blending: THREE.AdditiveBlending } );
+	const id = float( instanceIndex );
+	const r = vec3( hash( id.add( 11 ) ), hash( id.add( 37 ) ), hash( id.add( 73 ) ) );
+	const span = vec3( SILO.radius * 1.8, SILO.ceil - SILO.floor, SILO.radius * 1.8 );
+	const base = r.mul( span ).sub( span.mul( 0.5 ) );
+	const drift = vec3( sin( time.mul( 0.06 ).add( r.x.mul( 30 ) ) ).mul( 0.4 ), time.mul( 0.03 ).mul( r.y.add( 0.2 ) ), cos( time.mul( 0.05 ).add( r.z.mul( 25 ) ) ).mul( 0.4 ) );
+	const y = mod( base.y.add( drift.y ).add( 5.0 ), SILO.ceil - SILO.floor ).add( SILO.floor );
+	const pos = vec3( base.x.add( drift.x ), y, base.z.add( drift.z ) );
+	m.positionNode = pos;
+	m.scaleNode = hash( id.add( 5 ) ).mul( 0.009 ).add( 0.004 );
+	const warm = exp( length( pos.sub( uRedPos ) ).mul( 0.7 ).negate() ).mul( uPulse.mul( uPulseGain ).add( 1 ) );
+	m.colorNode = vec3( 0.04, 0.06, 0.055 ).add( vec3( 0.0, 0.85, 1.0 ).mul( warm ).mul( 0.85 ) ).mul( uDust );
+	m.opacityNode = smoothstep( 0.5, 0.0, length( uv().sub( 0.5 ) ) );
+	const dust = new THREE.Sprite( m );
+	dust.count = DUST; dust.frustumCulled = false;
+	env.add( dust );
+}
+
+// Silo Lighting
+const emberLight = new THREE.PointLight( 0x00e1ff, P.emberLight, 0, 2 );
+emberLight.castShadow = false;
+emberLight.position.copy( uRedPos.value );
+env.add( emberLight );
+
+const oculusSkyLight = new THREE.SpotLight( 0x82b4c8, P.moonLight, 0, 0.42, 0.8, 2 );
+oculusSkyLight.position.set( 0, SILO.ceil + 1.0, 0 );
+oculusSkyLight.target.position.set( 0, SILO.floor, 0 );
+oculusSkyLight.castShadow = true;
+oculusSkyLight.shadow.mapSize.set( 1024, 1024 );
+oculusSkyLight.shadow.bias = - 0.0015;
+env.add( oculusSkyLight, oculusSkyLight.target );
+
+const hemiLight = new THREE.HemisphereLight( 0x18282b, 0x050807, 0.23 );
+env.add( hemiLight );
+
+// ═══════════════════════════════════════════════════════════════════
+//  floor shader (monolithic industrial concrete, no puddle pool)
+// ═══════════════════════════════════════════════════════════════════
+
+const siloFloorMat = new THREE.MeshStandardNodeMaterial();
+{
+	const fp = positionWorld.xz;
+
+	// High-frequency concrete pore grit & gravel aggregate
+	const microGrain = mx_noise_float( vec3( fp.mul( 38.0 ), 4.7 ) );
+	const sandGrain  = mx_noise_float( vec3( fp.mul( 16.0 ), 1.2 ) );
+	const broadStain = fbm( vec3( fp.mul( 0.45 ), 2.3 ), 4 );
+
+	// Organic hairline fractures and expansion joints
+	const fbmFissure = fbm( vec3( fp.mul( 1.8 ), 6.1 ), 4 );
+	const ridgeA = abs( mx_noise_float( vec3( fp.mul( 3.2 ).add( fbmFissure.mul( 0.6 ) ), 9.1 ) ) );
+	const crackA = smoothstep( 0.022, 0.0, ridgeA );
+
+	const ridgeB = abs( mx_noise_float( vec3( fp.mul( 7.5 ), 3.4 ) ) );
+	const crackB = smoothstep( 0.015, 0.0, ridgeB ).mul( smoothstep( 0.1, 0.5, broadStain ) );
+
+	const jointGrid = min(
+		smoothstep( 0.012, 0.0, abs( fract( fp.x.mul( 0.35 ) ).sub( 0.5 ) ) ),
+		smoothstep( 0.012, 0.0, abs( fract( fp.y.mul( 0.35 ) ).sub( 0.5 ) ) )
+	);
+
+	// Dark, gritty, cinematic brutalist concrete palette
+	const darkBase = mix( vec3( 0.065, 0.075, 0.072 ), vec3( 0.038, 0.042, 0.040 ), smoothstep( - 0.25, 0.35, broadStain ) )
+		.mul( sandGrain.mul( 0.10 ).add( 0.95 ) )
+		.mul( microGrain.mul( 0.08 ).add( 0.96 ) );
+
+	// Darken cracks & joints
+	const crackMask = crackA.mul( 0.85 ).add( crackB.mul( 0.7 ) ).add( jointGrid.mul( 0.55 ) ).clamp( 0, 0.95 );
+	const floorAlbedo = darkBase.mul( float( 1.0 ).sub( crackMask ) );
+
+	siloFloorMat.colorNode = floorAlbedo;
+	siloFloorMat.roughnessNode = microGrain.mul( 0.08 ).add( 0.84 );
+	siloFloorMat.metalnessNode = float( 0.02 );
+
+	// Micro-relief bump mapping for concrete texture and cracks
+	const relief = microGrain.mul( 0.035 )
+		.add( sandGrain.mul( 0.045 ) )
+		.sub( crackMask.mul( 0.04 ) );
+
+	siloFloorMat.normalNode = bump( relief, float( 0.035 ) );
+
+	// Subtle radioactive Cherenkov core diffuse bounce onto porous concrete (no milky puddle)
+	const coreDist = length( fp.sub( uRedPos.xz ) );
+	const coreGlow = exp( coreDist.mul( 2.2 ).negate() ).mul( uPulse.mul( uPulseGain ).mul( 0.6 ).add( 0.25 ) );
+	const cherenkovGlowCol = mix( vec3( 0.0, 0.45, 0.55 ), vec3( 0.02, 0.50, 0.20 ), uPulse.mul( 0.75 ) );
+	siloFloorMat.emissiveNode = cherenkovGlowCol.mul( coreGlow.mul( 0.35 ) ).mul( float( 1.0 ).sub( crackMask.mul( 0.5 ) ) );
+}
+const siloFloorMesh = new THREE.Mesh( new THREE.CircleGeometry( SILO.radius + 1.5, 48 ), siloFloorMat );
+siloFloorMesh.rotation.x = - Math.PI / 2;
+siloFloorMesh.position.y = SILO.floor;
+siloFloorMesh.receiveShadow = true;
+env.add( siloFloorMesh );
+
+// Initial shadow map render
+renderer.shadowMap.needsUpdate = true;
+
+// ═══════════════════════════════════════════════════════════════════
+//  post processing
+// ═══════════════════════════════════════════════════════════════════
+
+const pipeline = new THREE.RenderPipeline( renderer );
+const scenePass = pass( scene, camera );
+const sceneColor = scenePass.getTextureNode( 'output' );
+
+const haze = VOL ? Fn( () => {
+	const ndc = vec2( screenUV.x.mul( 2 ).sub( 1 ), screenUV.y.mul( 2 ).sub( 1 ).negate() );
+	const far = uInvVP.mul( vec4( ndc, 1, 1 ) );
+	const dir = normalize( far.xyz.div( far.w ).sub( uCamPos ) ).toVar();
+	const R = 1.6;
+	const b = dot( uCamPos, dir ), c = dot( uCamPos, uCamPos ).sub( R * R );
+	const h = b.mul( b ).sub( c );
+	const col = vec3( 0 ).toVar();
+	If( h.greaterThan( 0 ), () => {
+		const sq = sqrt( h );
+		const t0 = max( b.negate().sub( sq ), 0 ), t1 = b.negate().add( sq );
+		const ds = t1.sub( t0 ).div( HAZE_STEPS ).toVar();
+		const jit = fract( fract( dot( screenCoordinate.xy, vec2( 0.06711056, 0.00583715 ) ) ).mul( 52.9829189 ) );
+		const T = float( 1 ).toVar();
+		Loop( HAZE_STEPS, ( { i } ) => {
+			const p = uCamPos.add( dir.mul( t0.add( ds.mul( float( i ).add( jit ) ) ) ) );
+			const g = toGrid( p );
+			const rho = texture3D( densTex, g ).level( 0 ).r;
+			const tr = texture3D( lightTex, g ).level( 0 ).g;
+			const glow = exp( length( p.sub( uRedPos ) ).mul( uFall ).negate() );
+			const cherenkovFlare = mix( vec3( 0.0, 0.85, 1.0 ), vec3( 0.08, 0.95, 0.35 ), uPulse );
+			col.addAssign( cherenkovFlare.mul( T.mul( rho ).mul( ds ).mul( tr ).mul( glow ) ) );
+			T.mulAssign( exp( rho.mul( ds ).mul( uExt ).mul( uHazeDens ).negate() ) );
+		} );
+	} );
+	return col.mul( uHazeGain ).mul( uPulse.mul( uPulseGain ).mul( 0.7 ).add( 1.0 ) );
+} )() : null;
+
+const combinedScene = haze && P.haze && P.shadows ? sceneColor.add( haze ) : sceneColor;
+const bloomPass = bloom( combinedScene, P.bloomStrength, P.bloomRadius, P.bloomThreshold );
+
+const setOutput = () => {
+	pipeline.outputNode = combinedScene.add( bloomPass );
+	pipeline.needsUpdate = true;
+};
+setOutput();
+
+// ═══════════════════════════════════════════════════════════════════
+//  pointer
+// ═══════════════════════════════════════════════════════════════════
+
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2( 9, 9 );
+const ptr = { inside: false, down: false, lastMove: - 1e9, strength: 0, prevHit: new THREE.Vector3(), hit: new THREE.Vector3(), first: true };
+const plane = new THREE.Plane();
+
+const setNDC = ( e ) => { ndc.set( ( e.clientX / innerWidth ) * 2 - 1, - ( e.clientY / innerHeight ) * 2 + 1 ); ptr.lastMove = performance.now(); ptr.inside = true; };
+
+renderer.domElement.addEventListener( 'pointermove', setNDC );
+renderer.domElement.addEventListener( 'pointerdown', ( e ) => { if ( e.button === 0 ) { setNDC( e ); ptr.down = true; } } );
+addEventListener( 'pointerup', () => { ptr.down = false; } );
+addEventListener( 'pointercancel', () => { ptr.down = false; ptr.inside = false; } );
+renderer.domElement.addEventListener( 'pointerleave', () => { ptr.inside = false; } );
+renderer.domElement.addEventListener( 'contextmenu', ( e ) => e.preventDefault() );
+
+// ═══════════════════════════════════════════════════════════════════
+//  pulse envelope
+// ═══════════════════════════════════════════════════════════════════
+
+const redBase = uRedPos.value.clone();
+const pulse = { next: 2.4, t0: - 99, dur: 1.2, amp: 1, from: redBase.clone(), to: redBase.clone(), force: false };
+
+function pulseEnvelope( t ) {
+
+	if ( ( P.pulse && t > pulse.next ) || pulse.force ) {
+		pulse.force = false;
+		pulse.t0 = t;
+		pulse.next = t + P.pulseMin + Math.random() * Math.max( 0, P.pulseMax - P.pulseMin );
+		pulse.dur = 0.8 + Math.random() * 0.9;
+		pulse.amp = 0.65 + Math.random() * 0.35;
+		pulse.from.copy( uRedPos.value );
+		const w = P.pulseWander;
+		pulse.to.set( redBase.x + ( Math.random() * 2 - 1 ) * w, redBase.y + ( Math.random() * 2 - 1 ) * w * 0.8, redBase.z + ( Math.random() * 2 - 1 ) * w );
+	}
+	const x = t - pulse.t0, attack = 0.16;
+	uRedPos.value.lerpVectors( pulse.from, pulse.to, Math.min( Math.max( x / ( attack * 2.5 ), 0 ), 1 ) );
+	if ( x < 0 ) return 0;
+	const env = x < attack ? Math.sin( ( x / attack ) * Math.PI * 0.5 ) : Math.exp( - ( x - attack ) / ( pulse.dur * 0.4 ) );
+	return env * pulse.amp;
+
+}
+addEventListener( 'keydown', ( e ) => { if ( e.code === 'Space' ) pulse.force = true; } );
+
+// ═══════════════════════════════════════════════════════════════════
+//  ghost pointer
+// ═══════════════════════════════════════════════════════════════════
+
+function ghost( t, tIdle ) {
+
+	if ( t < 3.2 ) {
+		const a = Math.min( t / 0.4, 1 );
+		ndc.set( - 0.12 + Math.sin( t * 0.9 ) * 0.03, 0.06 + Math.cos( t * 0.7 ) * 0.03 );
+		return { s: a * 0.9, down: true };
+	}
+	if ( ! P.autoStir || tIdle < 4 ) return null;
+	const u = t * 0.23;
+	ndc.set( Math.sin( u * 1.7 ) * 0.32, Math.sin( u * 1.1 + 1.3 ) * 0.28 );
+	return { s: 0.35 + 0.2 * Math.sin( u * 2.3 ), down: false };
+
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  custom glass controls binding
+// ═══════════════════════════════════════════════════════════════════
+
+const paneContainer = document.getElementById( 'pane-container' );
+const toggleBtn = document.getElementById( 'controls-toggle-btn' );
+
+let isOpen = false;
+toggleBtn.addEventListener( 'click', () => {
+	isOpen = ! isOpen;
+	paneContainer.classList.toggle( 'pane-hidden', ! isOpen );
+	toggleBtn.style.background = isOpen ? 'rgba(255, 255, 255, 0.18)' : 'rgba(255, 255, 255, 0.08)';
+	toggleBtn.style.borderColor = isOpen ? 'rgba(0, 212, 255, 0.55)' : 'rgba(255, 255, 255, 0.22)';
+} );
+
+function bindSlider( id, propKey, uniformRef ) {
+	const input = document.getElementById( `ctrl-${id}` );
+	const badge = document.getElementById( `val-${id}` );
+	if ( ! input || ! badge ) return;
+
+	input.addEventListener( 'input', ( e ) => {
+		const val = parseFloat( e.target.value );
+		P[ propKey ] = val;
+		if ( uniformRef ) uniformRef.value = val;
+		badge.textContent = val.toFixed( 2 );
+	} );
+}
+
+bindSlider( 'turbulence', 'turbulence', uTurb );
+bindSlider( 'flowFreq', 'flowFreq', uFreq );
+bindSlider( 'flowSpeed', 'flowSpeed', uFlowSpeed );
+bindSlider( 'lump', 'lump', uLump );
+bindSlider( 'spring', 'spring', uSpring );
+bindSlider( 'damping', 'damping', uDamp );
+
+bindSlider( 'pulseMin', 'pulseMin' );
+bindSlider( 'pulseMax', 'pulseMax' );
+bindSlider( 'pulseGain', 'pulseGain', uPulseGain );
+bindSlider( 'pulseTint', 'pulseTint', uPulseTint );
+bindSlider( 'pulsePierce', 'pulsePierce', uPulsePierce );
+bindSlider( 'pulseBloom', 'pulseBloom' );
+bindSlider( 'pulseWander', 'pulseWander' );
+
+const expSlider = document.getElementById( 'ctrl-exposure' );
+if ( expSlider ) {
+	expSlider.addEventListener( 'input', ( e ) => {
+		const val = parseFloat( e.target.value );
+		P.exposure = val;
+		renderer.toneMappingExposure = val;
+		document.getElementById( 'val-exposure' ).textContent = val.toFixed( 2 );
+	} );
+}
+
+const fogSlider = document.getElementById( 'ctrl-fog' );
+if ( fogSlider ) {
+	fogSlider.addEventListener( 'input', ( e ) => {
+		const val = parseFloat( e.target.value );
+		P.fog = val;
+		scene.fog.density = val;
+		document.getElementById( 'val-fog' ).textContent = val.toFixed( 3 );
+	} );
+}
+
+const oculusSlider = document.getElementById( 'ctrl-moonLight' );
+if ( oculusSlider ) {
+	oculusSlider.addEventListener( 'input', ( e ) => {
+		const val = parseFloat( e.target.value );
+		P.moonLight = val;
+		oculusSkyLight.intensity = val;
+		renderer.shadowMap.needsUpdate = true;
+		document.getElementById( 'val-moonLight' ).textContent = val.toFixed( 1 );
+	} );
+}
+
+const ambSlider = document.getElementById( 'ctrl-ambient' );
+if ( ambSlider ) {
+	ambSlider.addEventListener( 'input', ( e ) => {
+		const val = parseFloat( e.target.value );
+		P.ambient = val;
+		uAmb.value = val;
+		hemiLight.intensity = val * 2.3;
+		document.getElementById( 'val-ambient' ).textContent = val.toFixed( 2 );
+	} );
+}
+
+bindSlider( 'shafts', 'shafts', uShaft );
+
+const pulseCheckbox = document.getElementById( 'ctrl-pulse' );
+if ( pulseCheckbox ) {
+	pulseCheckbox.addEventListener( 'change', ( e ) => {
+		P.pulse = e.target.checked;
+	} );
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  resize guard & locked 60 FPS render loop
+// ═══════════════════════════════════════════════════════════════════
+
+const MIN_PX = 8;
+const viewOK = () => innerWidth >= MIN_PX && innerHeight >= MIN_PX;
+let sizeDirty = true;
+addEventListener( 'resize', () => { sizeDirty = true; } );
+function applySize() {
+	if ( ! viewOK() ) return false;
+	camera.aspect = innerWidth / innerHeight;
+	camera.updateProjectionMatrix();
+	renderer.setSize( innerWidth, innerHeight );
+	sizeDirty = false;
+	renderer.shadowMap.needsUpdate = true;
+	return true;
+}
+
+const timer = new THREE.Timer();
+timer.connect( document );
+let t = 0;
+
+let firstFrame = true, fpsMs = 16.6, fpsFrames = 0;
+let frameCount = 0;
+const fpsEl = document.getElementById( 'fps' );
+
+renderer.setAnimationLoop( () => {
+
+	timer.update();
+	if ( ! viewOK() ) return;
+	if ( sizeDirty && ! applySize() ) return;
+	// Uncapped delta timing to prevent 30 Hz throttling; clamped to 20 FPS min floor
+	const dt = Math.min( timer.getDelta(), 0.05 );
+	if ( firstFrame ) { firstFrame = false; document.getElementById( 'loader' ).classList.add( 'hidden' ); }
+	fpsMs = fpsMs * 0.95 + dt * 1000 * 0.05;
+	if ( ( ++ fpsFrames & 31 ) === 0 ) fpsEl.textContent = ( 1000 / fpsMs ).toFixed( 0 ) + ' fps';
+	t += dt;
+	frameCount ++;
+	controls.update( dt );
+
+	const now = performance.now();
+	const tIdle = ( now - ptr.lastMove ) / 1000;
+	let target = 0;
+	if ( ptr.down ) target = 1;
+	else if ( ptr.inside && tIdle < 1.5 ) target = P.hover;
+	else {
+		const g = ghost( t, tIdle );
+		if ( g ) target = g.s;
+	}
+	ptr.strength += ( target - ptr.strength ) * ( 1 - Math.exp( - dt * 8 ) );
+
+	ray.setFromCamera( ndc, camera );
+	uRayO.value.copy( ray.ray.origin );
+	uRayD.value.copy( ray.ray.direction );
+
+	plane.setFromNormalAndCoplanarPoint( camera.getWorldDirection( new THREE.Vector3() ).negate(), new THREE.Vector3() );
+	if ( ray.ray.intersectPlane( plane, ptr.hit ) ) {
+		if ( ptr.first ) { ptr.prevHit.copy( ptr.hit ); ptr.first = false; }
+		uPtrVel.value.subVectors( ptr.hit, ptr.prevHit ).clampLength( 0, 0.25 );
+		ptr.prevHit.copy( ptr.hit );
+	}
+
+	uPtr.value = ptr.strength;
+	uTime.value = t;
+	uPulse.value = pulseEnvelope( t );
+
+	emberLight.position.copy( uRedPos.value );
+	emberLight.color.set( 0x00e1ff ).lerp( new THREE.Color( 0x0df259 ), uPulse.value );
+	emberLight.intensity = P.emberLight * ( 1 + uPulse.value * P.pulseGain * 0.5 );
+
+	if ( bloomPass ) bloomPass.strength.value = P.bloomStrength * ( 1 + uPulse.value * P.pulseBloom );
+	uDt.value = dt;
+
+	uCamPos.value.copy( camera.position );
+	uInvVP.value.multiplyMatrices( camera.matrixWorld, camera.projectionMatrixInverse );
+
+	// Particle Simulation compute pass runs smoothly every frame
+	renderer.compute( update );
+
+	// Interleave volume density passes every 2nd frame or on pulse/interaction
+	if ( VOL && P.shadows && ( ( frameCount % 2 === 0 ) || ptr.down || uPulse.value > 0.05 ) ) {
+		renderer.compute( volumePasses );
+	}
+
+	// Render main pipeline with composited haze and bloom
+	pipeline.render();
+
+} );
+</script>
+
+</body>
+</html>
